@@ -27,7 +27,7 @@ orxSTATUS orxFASTCALL Run()
   orxSTATUS eResult = orxSTATUS_SUCCESS;
 
   // Gets mouse world position
-  if(orxRender_GetWorldPosition(orxMouse_GetPosition(&vMousePos), &vMousePos))
+  if(orxRender_GetWorldPosition(orxMouse_GetPosition(&vMousePos), orxNULL, &vMousePos))
   {
     // Has Action input just been triggered?
     if(orxInput_IsActive("Action") && orxInput_HasNewStatus("Action"))

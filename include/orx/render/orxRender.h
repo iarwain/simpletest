@@ -1,6 +1,6 @@
 /* Orx - Portable Game Engine
  *
- * Copyright (c) 2008-2013 Orx-Project
+ * Copyright (c) 2008-2015 Orx-Project
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -32,7 +32,7 @@
 
 /**
  * @addtogroup orxRender
- * 
+ *
  * Render plugin module
  * Renders visible objects on screen, using active cameras/viewports.
  *
@@ -47,6 +47,7 @@
 #include "orxInclude.h"
 #include "plugin/orxPluginCore.h"
 
+#include "display/orxDisplay.h"
 #include "object/orxFrame.h"
 #include "object/orxObject.h"
 #include "render/orxViewport.h"
@@ -71,6 +72,8 @@
 #define orxRENDER_KZ_INPUT_PROFILER_NEXT_FRAME      "ProfilerNextFrame"
 #define orxRENDER_KZ_INPUT_PROFILER_PREVIOUS_DEPTH  "ProfilerPreviousDepth"
 #define orxRENDER_KZ_INPUT_PROFILER_NEXT_DEPTH      "ProfilerNextDepth"
+#define orxRENDER_KZ_INPUT_PROFILER_PREVIOUS_THREAD "ProfilerPreviousThread"
+#define orxRENDER_KZ_INPUT_PROFILER_NEXT_THREAD     "ProfilerNextThread"
 
 
 /** Event enum
@@ -92,12 +95,14 @@ typedef enum __orxRENDER_EVENT_t
 
 /** Event payload
  */
-typedef struct __orxRENDER_EVENT_OBJECT_PAYLOAD_t
+typedef struct __orxRENDER_EVENT_PAYLOAD_t
 {
-  orxBITMAP *pstRenderBitmap;             /**< Bitmap where object is rendered : 4 */
-  orxFRAME  *pstRenderFrame;              /**< Frame position where object is rendered : 8 */
+  struct
+  {
+    orxDISPLAY_TRANSFORM *pstTransform;   /**< Object display transform : 4 / 8 */
+  } stObject;
 
-} orxRENDER_EVENT_OBJECT_PAYLOAD;
+} orxRENDER_EVENT_PAYLOAD;
 
 
 /***************************************************************************
@@ -124,15 +129,15 @@ extern orxDLLAPI void orxFASTCALL             orxRender_Exit();
 
 /** Get a world position given a screen one (absolute picking)
  * @param[in]   _pvScreenPosition                     Concerned screen position
- * @param[in]   _pstViewport                          Concerned viewport, if orxNULL then the first viewport containing the screen position will be used
+ * @param[in]   _pstViewport                          Concerned viewport, if orxNULL then either the last viewport that contains the position (if any), or the last viewport with a camera in the list if none contains the position
  * @param[out]  _pvWorldPosition                      Corresponding world position
- * @return      orxVECTOR if found, orxNULL otherwise
+ * @return      orxVECTOR if found *inside* the display surface, orxNULL otherwise
  */
 extern orxDLLAPI orxVECTOR *orxFASTCALL       orxRender_GetWorldPosition(const orxVECTOR *_pvScreenPosition, const orxVIEWPORT *_pstViewport, orxVECTOR *_pvWorldPosition);
 
 /** Get a screen position given a world one and a viewport (rendering position)
  * @param[in]   _pvWorldPosition                      Concerned world position
- * @param[in]   _pstViewport                          Concerned viewport, if orxNULL then the first viewport will be used
+ * @param[in]   _pstViewport                          Concerned viewport, if orxNULL then the last viewport with a camera will be used
  * @param[out]  _pvScreenPosition                     Corresponding screen position
  * @return      orxVECTOR if found (can be off-screen), orxNULL otherwise
  */

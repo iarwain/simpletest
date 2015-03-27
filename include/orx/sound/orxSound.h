@@ -1,6 +1,6 @@
 /* Orx - Portable Game Engine
  *
- * Copyright (c) 2008-2013 Orx-Project
+ * Copyright (c) 2008-2015 Orx-Project
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -80,7 +80,7 @@ typedef enum __orxSOUND_EVENT_t
 {
   orxSOUND_EVENT_START = 0,                   /**< Event sent when a sound starts */
   orxSOUND_EVENT_STOP,                        /**< Event sent when a sound stops */
-  orxSOUND_EVENT_PACKET,                      /**< Event sent when a sound packet is streamed */
+  orxSOUND_EVENT_PACKET,                      /**< Event sent when a sound packet is streamed. IMPORTANT: this event can be sent from a worker thread, do not call any orx API when handling it */
   orxSOUND_EVENT_RECORDING_START,             /**< Event sent when recording starts */
   orxSOUND_EVENT_RECORDING_STOP,              /**< Event sent when recording stops */
   orxSOUND_EVENT_RECORDING_PACKET,            /**< Event sent when a packet has been recorded */
@@ -161,7 +161,7 @@ extern orxDLLAPI orxSOUND *orxFASTCALL        orxSound_CreateFromConfig(const or
  * @param[in] _u32ChannelNumber Number of channels of the stream
  * @param[in] _u32SampleRate    Sampling rate of the stream (ie. number of frames per second)
  * @param[in] _zName            Name to associate with this sound
- * @return orxSOUNDSYSTEM_SAMPLE / orxNULL
+ * @return orxSOUND / orxNULL
  */
 extern orxDLLAPI orxSOUND *orxFASTCALL        orxSound_CreateWithEmptyStream(orxU32 _u32ChannelNumber, orxU32 _u32SampleRate, const orxSTRING _zName);
 

@@ -1,6 +1,6 @@
 /* Orx - Portable Game Engine
  *
- * Copyright (c) 2008-2013 Orx-Project
+ * Copyright (c) 2008-2015 Orx-Project
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -60,16 +60,29 @@
 
 #endif /* TARGET_OS_ANDROID */
 
+#ifdef TARGET_OS_ANDROID_NATIVE
+
+  #include <android/api-level.h>
+
+#endif /* TARGET_OS_ANDROID_NATIVE */
+
+#include <stddef.h>
+
 
 /* *** Platform dependent base declarations */
 
 /* No processor defines? */
-#if !defined(__orxARM__) && !defined(__orxPPC__) && !defined(__orxPPC64__) && !defined(__orxX86_64__) && !defined(__orxX86__)
+#if !defined(__orxARM__) && !defined(__orxPPC__) && !defined(__orxPPC64__) && !defined(__orxX86_64__) && !defined(__orxX86__) && !defined(__orxARM64__)
 
   /* ARM? */
   #if defined(__arm__) || defined(__ARMEL__) || defined(__ARM_EABI__)
 
     #define __orxARM__
+
+  /* ARM64? */
+  #elif defined(__arm64)
+
+    #define __orxARM64__
 
   /* PowerPC? */
   #elif defined(__ppc__) || defined(PPC) || defined(__PPC) || defined(__POWERPC__) || defined(__powerpc__)
@@ -93,7 +106,7 @@
 
   #endif
 
-#endif /* !__orxARM__ && !__orxPPC__ && !__orxPPC64__ && !__orxX86_64__ && !__orxX86__ */
+#endif /* !__orxARM__ && !__orxPPC__ && !__orxPPC64__ && !__orxX86_64__ && !__orxX86__ && !__orxARM64__ */
 
 /* Has byte order? */
 #if defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__)
@@ -155,7 +168,7 @@
 
 
 /* No platform defines? */
-#if !defined(__orxWINDOWS__) && !defined(__orxMAC__) && !defined(__orxLINUX__) && !defined(__orxIOS__) && !defined(__orxANDROID__) && !defined(__orxRASPBERRY_PI__)
+#if !defined(__orxWINDOWS__) && !defined(__orxMAC__) && !defined(__orxLINUX__) && !defined(__orxIOS__) && !defined(__orxANDROID__) && !defined(__orxANDROID_NATIVE__)&& !defined(__orxRASPBERRY_PI__)
 
   /* Windows? */
   #if defined(_WIN32) || defined(WIN32)
@@ -171,6 +184,11 @@
   #elif defined(TARGET_OS_ANDROID)
 
     #define __orxANDROID__
+
+  /* Android Native */
+  #elif defined(TARGET_OS_ANDROID_NATIVE)
+
+    #define __orxANDROID_NATIVE__
 
   /* Raspberry Pi */
   #elif defined(__orxARM__)
@@ -191,11 +209,11 @@
 
   #else
 
-    #error "Couldn't guess platform define. Please provide it (__orxWINDOWS__/__orxMAC__/__orxLINUX__/__orxIOS__/__orxANDROID__/__orxRASPBERRY_PI__)"
+    #error "Couldn't guess platform define. Please provide it (__orxWINDOWS__/__orxMAC__/__orxLINUX__/__orxIOS__/__orxANDROID__/__orxANDROID_NATIVE__/__orxRASPBERRY_PI__)"
 
   #endif
 
-#endif /* !__orxWINDOWS__ && !__orxMAC__ && !__orxLINUX__ && !__orxIOS__ && !__orxANDROID__ && !__orxRASPBERRY_PI__ */
+#endif /* !__orxWINDOWS__ && !__orxMAC__ && !__orxLINUX__ && !__orxIOS__ && !__orxANDROID__ && !__orxANDROID_NATIVE__ && !__orxRASPBERRY_PI__ */
 
 
 #ifdef __cplusplus
@@ -248,31 +266,34 @@
   #define orxNULL               (0)
 
   /* *** Compiler specific *** */
-  /** The function intend to be inlined. */
   #if defined(__orxFREEBASIC__)
 
+    /** The function intend to be inlined. */
     #define orxINLINE
 
   #elif defined(__orxGCC__)
 
+    /** The function intend to be inlined. */
     #define orxINLINE         inline
 
   #elif defined(__orxLLVM__)
 
+    /** The function intend to be inlined. */
     #define orxINLINE         inline
 
   #elif defined(__orxMSVC__)
 
+    /** The function intend to be inlined. */
     #define orxINLINE         __inline
 
   #endif
 
 #else /* __orxWINDOWS__ */
 
-  /* Linux / Mac / iOS */
-  #if defined(__orxLINUX__) || defined(__orxMAC__) || defined(__orxIOS__) || defined(__orxANDROID__)
+  /* Linux / Mac / iOS / Android */
+  #if defined(__orxLINUX__) || defined(__orxMAC__) || defined(__orxIOS__) || defined(__orxANDROID__) || defined(__orxANDROID_NATIVE__)
 
-    #if defined(__orxARM__) || defined(__orxLLVM__) || defined(__orxPPC__) || defined(__orxPPC64__) || defined(__orxX86_64__) || defined(__orxIOS__) || defined(__orxANDROID__) || defined(__orxRASPBERRY_PI__)
+    #if defined(__orxARM__) || defined(__orxLLVM__) || defined(__orxPPC__) || defined(__orxPPC64__) || defined(__orxX86_64__) || defined(__orxIOS__) || defined(__orxANDROID__) || defined(__orxANDROID_NATIVE__) || defined(__orxRASPBERRY_PI__) || defined(__orxARM64__)
 
       #define orxFASTCALL
 
@@ -280,7 +301,7 @@
 
       #define orxCDECL
 
-    #else /* __orxARM__ || __orxLLVM__ || __orxPPC__ || __orxPPC64__ || __orxX86_64__ || __orxIOS__ || __orxANDROID__ || __orxRASPBERRY_PI__ */
+    #else /* __orxARM__ || __orxLLVM__ || __orxPPC__ || __orxPPC64__ || __orxX86_64__ || __orxIOS__ || __orxANDROID__ || __orxANDROID_NATIVE__ || __orxRASPBERRY_PI__ || __orxARM64__ */
 
       #ifdef __orxFREEBASIC__
 
@@ -296,7 +317,7 @@
 
       #define orxCDECL          __attribute__ ((cdecl))
 
-    #endif /* __orxARM__ || __orxLLVM__ || __orxPPC__ || __orxPPC64__ || __orxX86_64__ || __orxIOS__ || __orxANDROID__ || __orxRASPBERRY_PI__ */
+    #endif /* __orxARM__ || __orxLLVM__ || __orxPPC__ || __orxPPC64__ || __orxX86_64__ || __orxIOS__ || __orxANDROID__ || __orxANDROID_NATIVE__ || __orxRASPBERRY_PI__ || __orxARM64__ */
 
     /** The symbol will be exported (dll compilation) */
     #define orxDLLEXPORT        __attribute__ ((visibility("default")))
@@ -304,13 +325,14 @@
     /** The symbol will be imported (exe compilation) */
     #define orxDLLIMPORT
 
-    /** The function is intended to be inlined */
     #ifdef __orxFREEBASIC__
 
+      /** The function intend to be inlined. */
       #define orxINLINE
 
     #else /* __orxFREEBASIC__ */
 
+      /** The function intend to be inlined. */
       #define orxINLINE         inline
 
     #endif /* __orxFREEBASIC__ */
@@ -318,14 +340,17 @@
     /** The null address */
     #define orxNULL             (0)
 
-    #if defined(__orxIOS__) || defined(__orxANDROID__) || defined(__orxRASPBERRY_PI__)
+    #if defined(__orxIOS__) || defined(__orxANDROID__) || defined(__orxANDROID_NATIVE__) || defined(__orxRASPBERRY_PI__)
 
       /* iOS versions can only be embedded due to the lack of dlfcn presence */
       #define __orxEMBEDDED__
 
-    #endif /* __orxIOS__ || __orxANDROID__ || __orxRASPBERRY_PI__ */
+      /* always use static on iOS, Android and Raspberry */
+      #define __orxSTATIC__
 
-  #endif /* __orxLINUX__ || __orxMAC__ || __orxIOS__ || __orxANDROID__ || __orxRASPBERRY_PI__ */
+    #endif /* __orxIOS__ || __orxANDROID__ || __orxANDROID_NATIVE__ || __orxRASPBERRY_PI__ */
+
+  #endif /* __orxLINUX__ || __orxMAC__ || __orxIOS__ || __orxANDROID__ || __orxANDROID_NATIVE__ || __orxRASPBERRY_PI__ */
 
 #endif /* __orxWINDOWS__ */
 
@@ -365,12 +390,22 @@
 
 
 /** Memory alignment macros */
-#define orxALIGN(ADDRESS, BLOCK_SIZE)   (((size_t)(ADDRESS) + ((BLOCK_SIZE) - 1)) & (~((BLOCK_SIZE) - 1)))
+#define orxALIGN(ADDRESS, BLOCK_SIZE)   (((size_t)(ADDRESS) + ((size_t)(BLOCK_SIZE) - 1)) & (~((size_t)(BLOCK_SIZE) - 1)))
 
 #define orxALIGN16(ADDRESS)             orxALIGN(ADDRESS, 16)
 #define orxALIGN32(ADDRESS)             orxALIGN(ADDRESS, 32)
 #define orxALIGN64(ADDRESS)             orxALIGN(ADDRESS, 64)
 
+
+/** Structure macros */
+#define orxSTRUCT_GET_FROM_FIELD(TYPE, FIELD, POINTER)   ((TYPE *)((orxU8 *)(POINTER) - offsetof(TYPE, FIELD)))
+
+
+/** Array macros */
+#define orxARRAY_GET_ITEM_COUNT(ARRAY)  (sizeof(ARRAY) / sizeof(ARRAY[0]))
+
+
+/** Flag macros */
 
 /** Tests all flags
  * @param[in] X Flag container

@@ -10,3 +10,5 @@ syntax: glob
 **.cih
 **.suo
 **.user
+**.sdf
+build/**/vs2013

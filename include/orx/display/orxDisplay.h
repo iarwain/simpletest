@@ -1,6 +1,6 @@
 /* Orx - Portable Game Engine
  *
- * Copyright (c) 2008-2013 Orx-Project
+ * Copyright (c) 2008-2015 Orx-Project
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -191,6 +191,7 @@ typedef struct __orxCOLOR_t
 #define orxDISPLAY_KZ_CONFIG_SMOOTH         "Smoothing"
 #define orxDISPLAY_KZ_CONFIG_VSYNC          "VSync"
 #define orxDISPLAY_KZ_CONFIG_DEPTHBUFFER    "DepthBuffer"
+#define orxDISPLAY_KZ_CONFIG_SHADER_VERSION "ShaderVersion"
 
 
 /** Shader texture suffixes
@@ -206,6 +207,7 @@ typedef struct __orxCOLOR_t
 typedef enum __orxDISPLAY_EVENT_t
 {
   orxDISPLAY_EVENT_SET_VIDEO_MODE = 0,
+  orxDISPLAY_EVENT_LOAD_BITMAP,
 
   orxDISPLAY_EVENT_NUMBER,
 
@@ -217,15 +219,30 @@ typedef enum __orxDISPLAY_EVENT_t
  */
 typedef struct __orxDISPLAY_EVENT_PAYLOAD_t
 {
-  orxU32  u32Width;                                     /**< Screen width : 4 */
-  orxU32  u32Height;                                    /**< Screen height : 8 */
-  orxU32  u32Depth;                                     /**< Screen depth : 12 */
-  orxU32  u32RefreshRate;                               /**< Refresh rate: 16 */
-  orxU32  u32PreviousWidth;                             /**< Previous screen width : 20 */
-  orxU32  u32PreviousHeight;                            /**< Previous screen height : 24 */
-  orxU32  u32PreviousDepth;                             /**< Previous screen depth : 28 */
-  orxU32  u32PreviousRefreshRate;                       /**< Previous refresh rate : 32 */
-  orxBOOL bFullScreen;                                  /**< FullScreen? : 36 */
+  union
+  {
+    struct
+    {
+      orxU32  u32Width;                                     /**< Screen width : 4 */
+      orxU32  u32Height;                                    /**< Screen height : 8 */
+      orxU32  u32Depth;                                     /**< Screen depth : 12 */
+      orxU32  u32RefreshRate;                               /**< Refresh rate: 16 */
+      orxU32  u32PreviousWidth;                             /**< Previous screen width : 20 */
+      orxU32  u32PreviousHeight;                            /**< Previous screen height : 24 */
+      orxU32  u32PreviousDepth;                             /**< Previous screen depth : 28 */
+      orxU32  u32PreviousRefreshRate;                       /**< Previous refresh rate : 32 */
+      orxBOOL bFullScreen;                                  /**< FullScreen? : 36 */
+
+    } stVideoMode;
+
+    struct
+    {
+      const orxSTRING zLocation;                            /**< File location : 40 */
+      orxU32          u32FilenameID;                        /**< File name ID : 44 */
+      orxU32          u32ID;                                /**< Bitmap (hardware texture) ID : 48 */
+
+    } stBitmap;
+  };
 
 } orxDISPLAY_EVENT_PAYLOAD;
 
@@ -294,13 +311,13 @@ static orxINLINE orxRGBA          orxRGBA_Set(orxU8 _u8R, orxU8 _u8G, orxU8 _u8B
 {
   orxRGBA stResult;
 
-  // Updates result
+  /* Updates result */
   stResult.u8R = _u8R;
   stResult.u8G = _u8G;
   stResult.u8B = _u8B;
   stResult.u8A = _u8A;
 
-  // Done!
+  /* Done! */
   return stResult;
 }
 
@@ -791,6 +808,12 @@ static orxCOLOR *orxFASTCALL      orxColor_FromHSVToRGB(orxCOLOR *_pstDst, const
   return pstResult;
 }
 
+/** Gets blend mode from a string
+ * @param[in]    _zBlendMode                          String to evaluate
+ * @return orxDISPLAY_BLEND_MODE
+ */
+extern orxDLLAPI orxDISPLAY_BLEND_MODE orxFASTCALL    orxDisplay_GetBlendModeFromString(const orxSTRING _zBlendMode);
+
 
 /***************************************************************************
  * Functions extended by plugins
@@ -838,7 +861,7 @@ extern orxDLLAPI orxBITMAP *orxFASTCALL               orxDisplay_CreateBitmap(or
 extern orxDLLAPI void orxFASTCALL                     orxDisplay_DeleteBitmap(orxBITMAP *_pstBitmap);
 
 
-/** Loads a bitmap from file
+/** Loads a bitmap from file (an event of ID orxDISPLAY_EVENT_BITMAP_LOAD will be sent upon completion, whether the loading is asynchronous or not)
  * @param[in]   _zFileName                            Name of the file to load
  * @return orxBITMAP * / orxNULL
  */
@@ -852,11 +875,24 @@ extern orxDLLAPI orxBITMAP *orxFASTCALL               orxDisplay_LoadBitmap(cons
 extern orxDLLAPI orxSTATUS orxFASTCALL                orxDisplay_SaveBitmap(const orxBITMAP *_pstBitmap, const orxSTRING _zFileName);
 
 
-/** Sets destination bitmap
- * @param[in]   _pstDst                               Destination bitmap
+/** Sets temp bitmap, if a valid temp bitmap is given, load operations will be asynchronous
+ * @param[in]   _pstBitmap                            Concerned bitmap, orxNULL for forcing synchronous load operations
  * @return orxSTATUS_SUCCESS / orxSTATUS_FAILURE
  */
-extern orxDLLAPI orxSTATUS orxFASTCALL                orxDisplay_SetDestinationBitmap(orxBITMAP *_pstDst);
+extern orxDLLAPI orxSTATUS orxFASTCALL                orxDisplay_SetTempBitmap(const orxBITMAP *_pstBitmap);
+
+/** Gets current temp bitmap
+ * @return orxBITMAP, if non-null, load operations are currently asynchronous, otherwise they're synchronous
+ */
+extern orxDLLAPI const orxBITMAP *orxFASTCALL         orxDisplay_GetTempBitmap();
+
+
+/** Sets destination bitmaps
+ * @param[in]   _apstBitmapList                       Destination bitmap list
+ * @param[in]   _u32Number                            Number of destination bitmaps
+ * @return orxSTATUS_SUCCESS / orxSTATUS_FAILURE
+ */
+extern orxDLLAPI orxSTATUS orxFASTCALL                orxDisplay_SetDestinationBitmaps(orxBITMAP **_apstBitmapList, orxU32 _u32Number);
 
 /** Clears a bitmap
  * @param[in]   _pstBitmap                            Concerned bitmap
@@ -864,6 +900,12 @@ extern orxDLLAPI orxSTATUS orxFASTCALL                orxDisplay_SetDestinationB
  * @return orxSTATUS_SUCCESS / orxSTATUS_FAILURE
  */
 extern orxDLLAPI orxSTATUS orxFASTCALL                orxDisplay_ClearBitmap(orxBITMAP *_pstBitmap, orxRGBA _stColor);
+
+/** Sets current blend mode
+ * @param[in]   _eBlendMode                           Blend mode to set
+ * @return orxSTATUS_SUCCESS / orxSTATUS_FAILURE
+ */
+extern orxDLLAPI orxSTATUS orxFASTCALL                orxDisplay_SetBlendMode(orxDISPLAY_BLEND_MODE _eBlendMode);
 
 /** Sets a bitmap clipping for blitting (both as source and destination)
  * @param[in]   _pstBitmap                            Concerned bitmap
@@ -897,7 +939,7 @@ extern orxDLLAPI orxSTATUS orxFASTCALL                orxDisplay_SetBitmapData(o
  * @param[in]   _u32ByteNumber                        Number of bytes of the buffer
  * @return orxSTATUS_SUCCESS / orxSTATUS_FAILURE
  */
-extern orxDLLAPI orxSTATUS orxFASTCALL                orxDisplay_GetBitmapData(orxBITMAP *_pstBitmap, orxU8 *_au8Data, orxU32 _u32ByteNumber);
+extern orxDLLAPI orxSTATUS orxFASTCALL                orxDisplay_GetBitmapData(const orxBITMAP *_pstBitmap, orxU8 *_au8Data, orxU32 _u32ByteNumber);
 
 /** Sets a bitmap color (lighting/hue)
  * @param[in]   _pstBitmap                            Concerned bitmap

@@ -1,6 +1,6 @@
 /* Orx - Portable Game Engine
  *
- * Copyright (c) 2008-2013 Orx-Project
+ * Copyright (c) 2008-2015 Orx-Project
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -32,9 +32,9 @@
 
 /**
  * @addtogroup orxSystem
- * 
- * Module file
- * Code that handles modules and their dependencies
+ *
+ * System file
+ * Code that handles system events and timers
  *
  * @{
  */
@@ -65,7 +65,7 @@ typedef enum __orxSYSTEM_EVENT_t
   orxSYSTEM_EVENT_TOUCH_END,
   orxSYSTEM_EVENT_ACCELERATE,
   orxSYSTEM_EVENT_MOTION_SHAKE,
-  
+
   orxSYSTEM_EVENT_NUMBER,
 
   orxSYSTEM_EVENT_NONE = orxENUM_NONE
@@ -112,15 +112,15 @@ extern orxDLLAPI orxSTATUS orxFASTCALL  orxSystem_Init();
  */
 extern orxDLLAPI void orxFASTCALL       orxSystem_Exit();
 
-/** Gets current time (elapsed from the beginning of the application)
+/** Gets current time (elapsed from the beginning of the application, in seconds)
  * @return Current time
  */
 extern orxDLLAPI orxDOUBLE orxFASTCALL  orxSystem_GetTime();
 
-/** Gets current real time (in seconds)
- * @return Current real time
+/** Gets real time (in seconds)
+ * @return Returns the amount of seconds elapsed since reference time (epoch)
  */
-extern orxDLLAPI orxS32 orxFASTCALL     orxSystem_GetRealTime();
+extern orxDLLAPI orxU64 orxFASTCALL     orxSystem_GetRealTime();
 
 /** Gets current internal system time (in seconds)
  * @return Current internal system time

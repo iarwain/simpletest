@@ -217,5 +217,11 @@ project "SimpleTest"
         {
             "winmm"
         }
-        libdirs {"../lib/windows"}
-        targetdir ("../bin/windows")
+
+    configuration {"windows", "x64"}
+        libdirs {"../lib/windows/64"}
+        targetdir ("../bin/windows/64")
+
+    configuration {"windows", "not x64"}
+        libdirs {"../lib/windows/32"}
+        targetdir ("../bin/windows/32")

@@ -1,6 +1,6 @@
 /* Orx - Portable Game Engine
  *
- * Copyright (c) 2008-2013 Orx-Project
+ * Copyright (c) 2008-2015 Orx-Project
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -80,8 +80,8 @@
 
 /** Structure register macro
  */
-#define orxSTRUCTURE_REGISTER(TYPE, STORAGE_TYPE, MEMORY_TYPE, UPDATE_FUNCTION) \
-  orxStructure_Register(orxSTRUCTURE_ID_##TYPE, STORAGE_TYPE, MEMORY_TYPE, sizeof(orx##TYPE), UPDATE_FUNCTION)
+#define orxSTRUCTURE_REGISTER(TYPE, STORAGE_TYPE, MEMORY_TYPE, BANK_SIZE, UPDATE_FUNCTION) \
+  orxStructure_Register(orxSTRUCTURE_ID_##TYPE, STORAGE_TYPE, MEMORY_TYPE, sizeof(orx##TYPE), BANK_SIZE, UPDATE_FUNCTION)
 
 /** Structure assert
  */
@@ -163,15 +163,21 @@ typedef enum __orxSTRUCTURE_STORAGE_TYPE_t
  */
 typedef struct __orxSTRUCTURE_t
 {
-  orxU64          u64GUID;          /**< Structure GUID : 8 */
-  orxHANDLE       hStorageNode;   /**< Internal storage node handle : 12/16 */
-  orxU32          u32Flags;       /**< Flags : 16/20 */
+  orxU64          u64GUID;        /**< Structure GUID : 8 */
+  orxU64          u64OwnerGUID;   /**< Owner's GUID : 16 */
+  orxHANDLE       hStorageNode;   /**< Internal storage node handle : 20/24 */
+  orxU32          u32Flags;       /**< Flags : 24/28 */
 
-#if defined(__orxX86_64__) || defined(__orxPPC64__)
 
-  orxU8           au8Padding[12]; /**< Extra padding to be 16-bit aligned on 64bit architectures */
+#if defined(__orxX86_64__) || defined(__orxPPC64__) || defined(__orxARM64__)
 
-#endif /* __orxX86_64__ || __orxPPC64__ */
+  orxU8           au8Padding[4]; /**< Extra padding to be 32-bytes aligned on 64bit architectures */
+
+#else /* __orxX86_64__ || __orxPPC64__ || __orxARM64__ */
+
+  orxU8           au8Padding[8]; /**< Extra padding to be 32-bytes aligned on 32bit architectures */
+
+#endif /* __orxX86_64__ || __orxPPC64__ || __orxARM64__ */
 
 } orxSTRUCTURE;
 
@@ -217,10 +223,11 @@ extern orxDLLAPI void orxFASTCALL                       orxStructure_Exit();
  * @param[in]   _eStorageType   Storage type to use for this structure type
  * @param[in]   _eMemoryType    Memory type to store this structure type
  * @param[in]   _u32Size        Structure size
+ * @param[in]   _u32BankSize    Bank (segment) size
  * @param[in]   _pfnUpdate      Structure update function
  * @return      orxSTATUS_SUCCESS / orxSTATUS_FAILURE
  */
-extern orxDLLAPI orxSTATUS  orxFASTCALL                 orxStructure_Register(orxSTRUCTURE_ID _eStructureID, orxSTRUCTURE_STORAGE_TYPE _eStorageType, orxMEMORY_TYPE _eMemoryType, orxU32 _u32Size, const orxSTRUCTURE_UPDATE_FUNCTION _pfnUpdate);
+extern orxDLLAPI orxSTATUS orxFASTCALL                  orxStructure_Register(orxSTRUCTURE_ID _eStructureID, orxSTRUCTURE_STORAGE_TYPE _eStorageType, orxMEMORY_TYPE _eMemoryType, orxU32 _u32Size, orxU32 _u32BankSize, const orxSTRUCTURE_UPDATE_FUNCTION _pfnUpdate);
 
 /** Unregisters a given ID
  * @param[in]   _eStructureID   Concerned structure ID
@@ -252,15 +259,22 @@ extern orxDLLAPI orxSTRUCTURE_STORAGE_TYPE orxFASTCALL  orxStructure_GetStorageT
  * @param[in]   _eStructureID   Concerned structure ID
  * @return      orxU32 / orxU32_UNDEFINED
  */
-extern orxDLLAPI orxU32     orxFASTCALL                 orxStructure_GetCounter(orxSTRUCTURE_ID _eStructureID);
+extern orxDLLAPI orxU32 orxFASTCALL                     orxStructure_GetCounter(orxSTRUCTURE_ID _eStructureID);
 
 /** Updates structure if update function was registered for the structure type
- * @param[in]   _pStructure    Concerned structure
+ * @param[in]   _pStructure     Concerned structure
  * @param[in]   _phCaller       Caller structure
  * @param[in]   _pstClockInfo   Update associated clock info
  * @return      orxSTATUS_SUCCESS / orxSTATUS_FAILURE
  */
-extern orxDLLAPI orxSTATUS  orxFASTCALL                 orxStructure_Update(void *_pStructure, const void *_phCaller, const orxCLOCK_INFO *_pstClockInfo);
+extern orxDLLAPI orxSTATUS orxFASTCALL                  orxStructure_Update(void *_pStructure, const void *_phCaller, const orxCLOCK_INFO *_pstClockInfo);
+
+
+/** Logs all user-generated active structures
+ * @param[in]   _bVerbose       If orxTRUE, the whole owner hierarchy of active structures will be logged, otherwise only owner-less ones (ie. roots) will be logged
+ * @return      orxSTATUS_SUCCESS / orxSTATUS_FAILURE
+ */
+extern orxDLLAPI orxSTATUS orxFASTCALL                  orxStructure_LogAll(orxBOOL _bVerbose);
 
 
 /** *** Structure storage accessors *** */
@@ -271,6 +285,19 @@ extern orxDLLAPI orxSTATUS  orxFASTCALL                 orxStructure_Update(void
  * @return      orxSTRUCTURE / orxNULL if not found/alive
  */
 extern orxDLLAPI orxSTRUCTURE *orxFASTCALL              orxStructure_Get(orxU64 _u64GUID);
+
+/** Gets structure's owner
+ * @param[in]   _pStructure    Concerned structure
+ * @return      orxSTRUCTURE / orxNULL if not found/alive
+ */
+extern orxDLLAPI orxSTRUCTURE *orxFASTCALL              orxStructure_GetOwner(const void *_pStructure);
+
+/** Sets structure owner
+ * @param[in]   _pStructure    Concerned structure
+ * @param[in]   _pOwner        Structure to set as owner
+ * @return      orxSTATUS_SUCCESS / orxSTATUS_FAILURE
+ */
+extern orxDLLAPI orxSTATUS orxFASTCALL                  orxStructure_SetOwner(void *_pStructure, void *_pOwner);
 
 /** Gets first stored structure (first list cell or tree root depending on storage type)
  * @param[in]   _eStructureID   Concerned structure ID
@@ -319,7 +346,7 @@ extern orxDLLAPI orxSTRUCTURE *orxFASTCALL              orxStructure_GetNext(con
  * @param[in]   _phParent       Structure to set as parent
  * @return      orxSTATUS_SUCCESS / orxSTATUS_FAILURE
  */
-extern orxDLLAPI orxSTATUS  orxFASTCALL                 orxStructure_SetParent(void *_pStructure, void *_phParent);
+extern orxDLLAPI orxSTATUS orxFASTCALL                  orxStructure_SetParent(void *_pStructure, void *_phParent);
 
 
 /** *** Inlined structure accessors *** */
@@ -365,7 +392,7 @@ static orxINLINE void                                   orxStructure_DecreaseCou
   u64Counter = (orxSTRUCTURE(_pStructure)->u64GUID & orxSTRUCTURE_GUID_MASK_REF_COUNTER) >> orxSTRUCTURE_GUID_SHIFT_REF_COUNTER;
 
   /* Checks */
-  orxASSERT(u64Counter > 0);
+  orxASSERT(u64Counter != 0);
 
   /* Updates it */
   u64Counter--;

@@ -1,6 +1,6 @@
 /* Orx - Portable Game Engine
  *
- * Copyright (c) 2008-2013 Orx-Project
+ * Copyright (c) 2008-2015 Orx-Project
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -32,7 +32,7 @@
 
 /**
  * @addtogroup orxTexture
- * 
+ *
  * Texture module
  * Module that handles textures
  *
@@ -51,9 +51,11 @@
 
 /** Defines
  */
-#define orxTEXTURE_KZ_SCREEN_NAME         "-=SCREEN=-"
+#define orxTEXTURE_KZ_SCREEN_NAME         "-=Screen=-"
 
 #define orxTEXTURE_KZ_RESOURCE_GROUP      "Texture"
+
+#define orxTEXTURE_KZ_PIXEL               "pixel"
 
 
 /** Event enum
@@ -62,6 +64,7 @@ typedef enum __orxTEXTURE_EVENT_t
 {
   orxTEXTURE_EVENT_CREATE = 0,
   orxTEXTURE_EVENT_DELETE,
+  orxTEXTURE_EVENT_LOAD,
 
   orxTEXTURE_EVENT_NUMBER,
 
@@ -136,7 +139,7 @@ extern orxDLLAPI orxSTATUS orxFASTCALL    orxTexture_GetSize(const orxTEXTURE *_
 
 /** Gets texture name
  * @param[in]   _pstTexture   Concerned texture
- * @return      Texture name / orxNULL
+ * @return      Texture name / orxSTRING_EMPTY
  */
 extern orxDLLAPI const orxSTRING orxFASTCALL orxTexture_GetName(const orxTEXTURE *_pstTexture);
 
@@ -151,6 +154,11 @@ extern orxDLLAPI orxSTATUS orxFASTCALL    orxTexture_SetColor(orxTEXTURE *_pstTe
  * @return      Screen texture / orxNULL
  */
 extern orxDLLAPI orxTEXTURE *orxFASTCALL  orxTexture_GetScreenTexture();
+
+/** Gets pending load counter
+ * @return      Pending load counter
+ */
+extern orxDLLAPI orxU32 orxFASTCALL       orxTexture_GetLoadCounter();
 
 #endif /* _orxTEXTURE_H_ */
 

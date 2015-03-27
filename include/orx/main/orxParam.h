@@ -1,6 +1,6 @@
 /* Orx - Portable Game Engine
  *
- * Copyright (c) 2008-2013 Orx-Project
+ * Copyright (c) 2008-2015 Orx-Project
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -32,7 +32,7 @@
 
 /**
  * @addtogroup orxParam
- * 
+ *
  * Param module
  * Module that handles command line parameters
  *
@@ -57,7 +57,7 @@
 /** Callback definition (called when a parameter has been found
  * @param[in] _u32NbParam Number of extra parameters read for this option
  * @param[in] _azParams   Array of extra parameters (the first one is always the option name)
- * @return Returns orxSTATUS_SUCCESS if informations read are correct, orxSTATUS_FAILURE if a problem has occured
+ * @return Returns orxSTATUS_SUCCESS if read information is correct, orxSTATUS_FAILURE if a problem occurred
  */
 typedef orxSTATUS (orxFASTCALL *orxPARAM_INIT_FUNCTION)(orxU32 _u32NbParam, const orxSTRING _azParams[]);
 
@@ -66,7 +66,7 @@ typedef struct __orxPARAM_t
 {
   /* Flags associated to the parameters' parser */
   orxU32                  u32Flags;
-  
+
   /* Short parameter name (ex: "h" for help (will be -h)) */
   const orxSTRING         zShortName;
 
@@ -79,10 +79,10 @@ typedef struct __orxPARAM_t
   /* Long description (ex: "Display the list of parameters.
    * -help <param> displays the <param> long description") */
   const orxSTRING         zLongDesc;
-  
+
   /* Function called when the parameter is detected in the command line */
   orxPARAM_INIT_FUNCTION  pfnParser;
-  
+
 } orxPARAM;
 
 
@@ -101,7 +101,7 @@ extern orxDLLAPI void orxFASTCALL       orxParam_Exit();
 
 
 /** Registers a new parameter
- * @param[in] _pstParam Informations about the option to register
+ * @param[in] _pstParam Information about the option to register
  * @return orxSTATUS_SUCCESS / orxSTATUS_FAILURE
  */
 extern orxDLLAPI orxSTATUS orxFASTCALL  orxParam_Register(const orxPARAM *_pstParam);

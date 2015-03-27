@@ -1,6 +1,6 @@
 /* Orx - Portable Game Engine
  *
- * Copyright (c) 2008-2013 Orx-Project
+ * Copyright (c) 2008-2015 Orx-Project
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -34,7 +34,7 @@
 
 /**
  * @addtogroup orxDebug
- * 
+ *
  * Debug module
  * Module used to output debug info and assert code
  *
@@ -219,11 +219,12 @@
     do                                                        \
     {                                                         \
       orxCHAR   zBuffer[256];                                 \
-      strncpy(zBuffer, FILE, 256);                            \
-      strncat(zBuffer, orxDEBUG_KZ_DEFAULT_DEBUG_SUFFIX, 256);\
+      zBuffer[255] = orxCHAR_NULL;                            \
+      strncpy(zBuffer, FILE, 255);                            \
+      strncat(zBuffer, orxDEBUG_KZ_DEFAULT_DEBUG_SUFFIX, 255);\
       _orxDebug_SetDebugFile(zBuffer);                        \
-      strncpy(zBuffer, FILE, 256);                            \
-      strncat(zBuffer, orxDEBUG_KZ_DEFAULT_LOG_SUFFIX, 256);  \
+      strncpy(zBuffer, FILE, 255);                            \
+      strncat(zBuffer, orxDEBUG_KZ_DEFAULT_LOG_SUFFIX, 255);  \
       _orxDebug_SetLogFile(zBuffer);                          \
     } while(orxFALSE)
 
@@ -261,8 +262,9 @@
     do                                                        \
     {                                                         \
       orxCHAR   zBuffer[256];                                 \
-      strncpy(zBuffer, FILE, 256);                            \
-      strncat(zBuffer, orxDEBUG_KZ_DEFAULT_LOG_SUFFIX, 256);  \
+      zBuffer[255] = orxCHAR_NULL;                            \
+      strncpy(zBuffer, FILE, 255);                            \
+      strncat(zBuffer, orxDEBUG_KZ_DEFAULT_LOG_SUFFIX, 255);  \
       _orxDebug_SetLogFile(zBuffer);                          \
     } while(orxFALSE)
 
@@ -384,6 +386,6 @@ extern orxDLLAPI void orxFASTCALL             _orxDebug_SetDebugFile(const orxST
  */
 extern orxDLLAPI void orxFASTCALL             _orxDebug_SetLogFile(const orxSTRING _zFileName);
 
-#endif /* __orxDEBUG__ */
+#endif /* __orxDEBUG_H_ */
 
 /** @} */
